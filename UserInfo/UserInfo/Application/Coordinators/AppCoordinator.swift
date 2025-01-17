@@ -13,10 +13,12 @@ final class AppCoordinator: Coordinator {
     var childCoordinators = [Coordinator]()
     var navigationController = UINavigationController()
     
-    private var window: UIWindow?
+    private let window: UIWindow?
+    private let sessionKeeper: SessionKeeper
     
     init(window: UIWindow?) {
         self.window = window
+        self.sessionKeeper = SessionKeeper(storage: SessionStorageUserDefaults())
     }
     
     func start() {
@@ -31,7 +33,12 @@ final class AppCoordinator: Coordinator {
                 self?.removeChild(coordinator)
             }
             self?.navigationController.viewControllers.removeAll()
-            //TODO: analyze session and decide which module to start
+            
+            if let session = self?.sessionKeeper.getSession() {
+                self?.startUsersModule()
+            } else {
+                self?.startAuthModule()
+            }
         }
         coordinator.start()
         self.addChild(coordinator)
