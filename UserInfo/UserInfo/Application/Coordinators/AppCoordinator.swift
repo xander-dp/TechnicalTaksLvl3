@@ -18,12 +18,14 @@ final class AppCoordinator: Coordinator {
     //dependencies for childs
     private let initStepsProvider: AppInitStepsProvider
     private let sessionKeeper: SessionKeeper
+    private let validator: CredentialsValidator
     
     init(window: UIWindow?, dependencyMaker: DependencyMaker) {
         self.window = window
         
         initStepsProvider = dependencyMaker.makeAppInitStepsProvider()
         sessionKeeper = dependencyMaker.makeSessionKeeper()
+        validator = dependencyMaker.makeCredentialsValidator()
     }
     
     func start() {
@@ -53,7 +55,7 @@ final class AppCoordinator: Coordinator {
     }
     
     func startAuthModule() {
-        let coordinator = AuthCoordinator(navigationController)
+        let coordinator = AuthCoordinator(navigationController, sessionKeeper: sessionKeeper, validator: validator)
         coordinator.finish = { [weak self, weak coordinator] in
             if let coordinator {
                 self?.removeChild(coordinator)

@@ -13,7 +13,7 @@ final class SplashScreenCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     
-    var activeSessionExist: Bool!
+    var activeSessionExist: Bool = false
     
     private let initStepsProvider: AppInitStepsProvider
     private let sessionKeeper: SessionKeeper

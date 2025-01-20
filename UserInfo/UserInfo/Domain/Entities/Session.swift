@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum AuthType {
+enum SessionType: Int {
     case guest
     case user
 }
@@ -15,7 +15,7 @@ enum AuthType {
 struct Session: Equatable, Copyable {
     let token: UUID
     let validUntil: Date
-    let type: AuthType
+    let type: SessionType
     
     var isValid: Bool {
         Date().distance(to: validUntil) > 0
@@ -23,5 +23,30 @@ struct Session: Equatable, Copyable {
     
     static func == (lhs: Session, rhs: Session) -> Bool {
         lhs.token == rhs.token
+    }
+}
+
+extension Session: Codable {
+    enum CodingKeys: String, CodingKey {
+        case token
+        case validUntil = "user_last_name"
+        case typeRaw
+    }
+    
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        token = try container.decode(UUID.self, forKey: .token)
+        validUntil = try container.decode(Date.self, forKey: .validUntil)
+        let typeRaw = try container.decode(Int.self, forKey: .typeRaw)
+        type = SessionType(rawValue: typeRaw)!
+    }
+    
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(token, forKey: .token)
+        try container.encode(validUntil, forKey: .validUntil)
+        try container.encode(type.rawValue, forKey: .typeRaw)
     }
 }
