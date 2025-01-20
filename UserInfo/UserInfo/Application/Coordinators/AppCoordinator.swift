@@ -14,11 +14,16 @@ final class AppCoordinator: Coordinator {
     var navigationController = UINavigationController()
     
     private let window: UIWindow?
+    
+    //dependencies for childs
+    private let initStepsProvider: AppInitStepsProvider
     private let sessionKeeper: SessionKeeper
     
-    init(window: UIWindow?) {
+    init(window: UIWindow?, dependencyMaker: DependencyMaker) {
         self.window = window
-        self.sessionKeeper = SessionKeeper(storage: SessionStorageUserDefaults())
+        
+        initStepsProvider = dependencyMaker.makeAppInitStepsProvider()
+        sessionKeeper = dependencyMaker.makeSessionKeeper()
     }
     
     func start() {
@@ -27,14 +32,17 @@ final class AppCoordinator: Coordinator {
     }
     
     func startSplashScreen() {
-        let coordinator = SplashScreenCoordinator(navigationController)
+        let coordinator = SplashScreenCoordinator(navigationController, initStepsProvider: initStepsProvider, sessionKeeper: sessionKeeper)
         coordinator.finish = { [weak self, weak coordinator] in
+            var activeSessionExist = false
+            
             if let coordinator {
+                activeSessionExist = coordinator.activeSessionExist
                 self?.removeChild(coordinator)
             }
             self?.navigationController.viewControllers.removeAll()
             
-            if let session = self?.sessionKeeper.getSession() {
+            if activeSessionExist {
                 self?.startUsersModule()
             } else {
                 self?.startAuthModule()
