@@ -77,7 +77,8 @@ final class AuthViewController: UIViewController {
     
     private let activityIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView(style: .medium)
-        indicator.color = .red
+        indicator.color = .systemBlue
+        indicator.style = .large
         indicator.hidesWhenStopped = true
         indicator.translatesAutoresizingMaskIntoConstraints = false
         return indicator
@@ -161,6 +162,12 @@ final class AuthViewController: UIViewController {
                 self?.presentAlert(message: errorDescription)
             }
             .store(in: &cancellables)
+        
+        output.requestInProgress
+            .sink { [weak self] inProgress in
+                self?.setInProgressState(inProgress)
+            }
+            .store(in: &cancellables)
     }
     
     @objc func emailFieldDidChange() {
@@ -187,7 +194,7 @@ final class AuthViewController: UIViewController {
         loginButtonTappedSubject.send(.guest)
     }
     
-    func presentAlert(message: String) {
+    private func presentAlert(message: String) {
         let alertController = UIAlertController(
             title: Constants.errorAlertTitle,
             message: message,
@@ -197,5 +204,18 @@ final class AuthViewController: UIViewController {
         alertController.addAction(okAction)
         
         present(alertController, animated: true, completion: nil)
+    }
+    
+    private func setInProgressState(_ inProgress: Bool) {
+        if inProgress {
+            self.activityIndicator.startAnimating()
+        } else {
+            self.activityIndicator.stopAnimating()
+        }
+        
+        emailTextField.isEnabled = !inProgress
+        passwordTextField.isEnabled = !inProgress
+        loginButton.isEnabled = !inProgress
+        guestButton.isEnabled = !inProgress
     }
 }

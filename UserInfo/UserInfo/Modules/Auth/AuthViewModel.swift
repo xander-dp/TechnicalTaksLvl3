@@ -22,9 +22,11 @@ final class AuthViewModel {
         let emailValidationError: AnyPublisher<String, Never>
         let passwordValidationError: AnyPublisher<String, Never>
         let authError: AnyPublisher<String, Never>
+        let requestInProgress: AnyPublisher<Bool, Never>
     }
 
     private let loginErrorSubject = PassthroughSubject<String, Never>()
+    private let progressSubject = PassthroughSubject<Bool, Never>()
     
     private var email = ""
     private var password = ""
@@ -89,16 +91,27 @@ final class AuthViewModel {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
         
+        let progress = self.progressSubject
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+        
         return Output(
             isLoginEnabled: loginEnabled,
             emailValidationError: enteredEmailInvalid,
             passwordValidationError: enteredPasswordInvalid,
-            authError: authError
+            authError: authError,
+            requestInProgress: progress
         )
     }
     
     private func authorizeUser(with type: SessionType) {
+        progressSubject.send(true)
+        
         Task {
+            defer {
+                progressSubject.send(false)
+            }
+            
             do {
                 try await sessionKeeper.createSession(for: type, with: (email: self.email, password: self.password))
                 
