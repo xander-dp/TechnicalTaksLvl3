@@ -31,9 +31,11 @@ final class AuthViewModel {
     
     private var cancellables = Set<AnyCancellable>()
     private let sessionKeeper: SessionKeeper
+    private let validator: CredentialsValidator
     
-    init(sessionKeeper: SessionKeeper) {
+    init(sessionKeeper: SessionKeeper, validator: CredentialsValidator) {
         self.sessionKeeper = sessionKeeper
+        self.validator = validator
     }
     
     func transform(input: Input) -> Output {
@@ -46,16 +48,15 @@ final class AuthViewModel {
         let emailIsValid = input.enteredEmail
             .map { [weak self] in
                 self?.email = $0
-                return !($0.isEmpty)
-                //self.validator.isValidEmail($0)
+                return self?.validator.validateEmail($0) ?? false
             }
             .eraseToAnyPublisher()
         
         let passwordIsValid = input.enteredPassword
             .map { [weak self] in
                 self?.password = $0
-                return !($0.isEmpty)
-                //self.validator.isValidPassword($0)
+                
+                return self?.validator.validatePassword($0) ?? false
             }
             .eraseToAnyPublisher()
         
@@ -64,8 +65,17 @@ final class AuthViewModel {
             .eraseToAnyPublisher()
         
         let enteredEmailInvalid = emailIsValid
-            .map {
-                return !$0 ? "\(self.email) is Invalid" : ""
+            .map { [weak self] isValid in
+                var error = ""
+                guard let self else { return error}
+                if !isValid {
+                    if (self.email.isEmpty) {
+                        error = "Email shouldn't be empty"
+                    } else {
+                        error = "\(self.email) is Invalid Email"
+                    }
+                }
+                return error
             }
             .eraseToAnyPublisher()
         

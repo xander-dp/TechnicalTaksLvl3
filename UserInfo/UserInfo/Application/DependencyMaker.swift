@@ -17,6 +17,10 @@ struct DependencyMaker {
         AppInitStepsHardcodedProvider()
     }
     
+    func makeCredentialsValidator() -> CredentialsValidator {
+        CredentialsValidatorImplementation()
+    }
+    
     private func makeSessionStorage() -> SessionStorage {
         SessionStorageUserDefaults()
     }

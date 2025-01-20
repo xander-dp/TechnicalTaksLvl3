@@ -14,14 +14,16 @@ final class AuthCoordinator: Coordinator {
     var navigationController: UINavigationController
     
     private let sessionKeeper: SessionKeeper
+    private let validator: CredentialsValidator
     
-    init(_ navigationController: UINavigationController, sessionKeeper: SessionKeeper) {
+    init(_ navigationController: UINavigationController, sessionKeeper: SessionKeeper, validator: CredentialsValidator) {
         self.navigationController = navigationController
         self.sessionKeeper = sessionKeeper
+        self.validator = validator
     }
     
     func start() {
-        let viewModel = AuthViewModel(sessionKeeper: sessionKeeper)
+        let viewModel = AuthViewModel(sessionKeeper: sessionKeeper, validator: validator)
         
         viewModel.userAuthorized = { [weak self] in
             self?.finish?()
