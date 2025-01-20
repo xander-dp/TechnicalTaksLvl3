@@ -5,7 +5,7 @@
 //  Created by Oleksandr Savchenko on 20.01.25.
 //
 
-final class DependencyMaker {
+struct DependencyMaker {
     func makeSessionKeeper() -> SessionKeeper {
         let storage = makeSessionStorage()
         return SessionKeeper(storage: storage)
