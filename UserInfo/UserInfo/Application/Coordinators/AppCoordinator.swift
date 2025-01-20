@@ -53,7 +53,7 @@ final class AppCoordinator: Coordinator {
     }
     
     func startAuthModule() {
-        let coordinator = AuthCoordinator(navigationController)
+        let coordinator = AuthCoordinator(navigationController, sessionKeeper: sessionKeeper)
         coordinator.finish = { [weak self, weak coordinator] in
             if let coordinator {
                 self?.removeChild(coordinator)

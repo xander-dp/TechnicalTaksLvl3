@@ -13,11 +13,23 @@ final class AuthCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     
-    func start() {
-        
+    private let sessionKeeper: SessionKeeper
+    
+    init(_ navigationController: UINavigationController, sessionKeeper: SessionKeeper) {
+        self.navigationController = navigationController
+        self.sessionKeeper = sessionKeeper
     }
     
-    init(_ navigationController: UINavigationController) {
-        self.navigationController = navigationController
+    func start() {
+        let viewModel = AuthViewModel(sessionKeeper: sessionKeeper)
+        
+        viewModel.userAuthorized = { [weak self] in
+            self?.finish?()
+        }
+        
+        let viewController = AuthViewController()
+        viewController.viewModel = viewModel
+        
+        navigationController.pushViewController(viewController, animated: true)
     }
 }

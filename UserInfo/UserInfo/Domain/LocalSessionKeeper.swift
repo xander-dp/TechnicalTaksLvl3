@@ -7,37 +7,36 @@
 
 import Foundation
 
-fileprivate enum Constants {
-    static let ttlInMinutes = 10
-}
-
 final class LocalSessionKeeper: SessionKeeper {
     private var currentSession: Session? {
         didSet {
             if let currentSession {
                 storage.writeSession(currentSession)
             } else {
-                storage.wipeSession()
+                storage.wipeSessionData()
             }
         }
     }
     
     private let storage: SessionStorage
+    private let authService: UserAuthorizationService
     
-    init(storage: SessionStorage) {
+    init(storage: SessionStorage, authService: UserAuthorizationService) {
         self.storage = storage
+        self.authService = authService
     }
 
-    func createSession(of type: AuthType) -> Session {
-        let validityOffset = TimeInterval(Constants.ttlInMinutes * 60)
-        let session = Session(
-            token: UUID(),
-            validUntil: Date().advanced(by: validityOffset),
-            type: type
-        )
+    func createSession(for type: SessionType, with credentials: Credentials) async throws {
+        let session: Session
+        
+        switch type {
+        case .guest:
+            session = try await authService.guestLogin()
+        case .user:
+            session = try await authService.authorizeWithCredentials(email: credentials.email, password: credentials.password)
+        }
         
         currentSession = session
-        return session
     }
     
     func getSession() -> Session? {
@@ -57,20 +56,16 @@ final class LocalSessionKeeper: SessionKeeper {
         return savedSession
     }
     
-    func updateSession(_ session: Session) -> Session {
-        let validityOffset = TimeInterval(Constants.ttlInMinutes * 60)
-        
-        let newSession = Session (
-            token: session.token,
-            validUntil: Date().advanced(by: validityOffset),
-            type: session.type
-        )
+    func updateSession(_ session: Session) async throws -> Session {
+        let newSession = try await authService.updateSession(session)
         
         currentSession = newSession
         return newSession
     }
     
-    func invalidateCurrentSession() {
+    func invalidateCurrentSession(sessionInvalidatedCallback: (() -> Void)? = nil) async throws {
+        try await authService.logout()
         currentSession = nil
+        sessionInvalidatedCallback?()
     }
 }

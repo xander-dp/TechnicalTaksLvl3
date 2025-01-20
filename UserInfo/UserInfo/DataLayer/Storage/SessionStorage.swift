@@ -10,7 +10,7 @@ import Foundation
 protocol SessionStorage {
     func writeSession(_ session: Session)
     func readSession() -> Session?
-    func wipeSession()
+    func wipeSessionData()
 }
 
 final class SessionStorageUserDefaults: SessionStorage {
@@ -22,18 +22,20 @@ final class SessionStorageUserDefaults: SessionStorage {
     }
     
     func writeSession(_ session: Session) {
-        userDefaults.set(session, forKey: key)
+        let encoded = try? PropertyListEncoder().encode(session)
+        userDefaults.set(encoded, forKey: key)
     }
     
     func readSession() -> Session? {
-        guard let some = userDefaults.object(forKey: key) else {
+        guard let someData = userDefaults.object(forKey: key) as? Data else {
             return nil
         }
         
-        return some as? Session
+        let decoded = try? PropertyListDecoder().decode(Session.self, from: someData)
+        return decoded
     }
     
-    func wipeSession() {
+    func wipeSessionData() {
         userDefaults.removeObject(forKey: key)
     }
 }
