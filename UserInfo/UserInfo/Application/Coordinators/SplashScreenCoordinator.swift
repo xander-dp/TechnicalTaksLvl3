@@ -13,11 +13,27 @@ final class SplashScreenCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     
-    func start() {
-        
+    var activeSessionExist: Bool!
+    
+    private let initStepsProvider: AppInitStepsProvider
+    private let sessionKeeper: SessionKeeper
+    
+    init(_ navigationController: UINavigationController, initStepsProvider: AppInitStepsProvider, sessionKeeper: SessionKeeper) {
+        self.navigationController = navigationController
+        self.initStepsProvider = initStepsProvider
+        self.sessionKeeper = sessionKeeper
     }
     
-    init(_ navigationController: UINavigationController) {
-        self.navigationController = navigationController
+    func start() {
+        let viewModel = SplashScreenViewModel(stepsProvider: initStepsProvider, sessionKeeper: sessionKeeper)
+        
+        viewModel.initializationCompleted = { [weak self] hasActiveSession in
+            self?.activeSessionExist = hasActiveSession
+            self?.finish?()
+        }
+        
+        let viewController = SplashScreenViewController()
+        viewController.viewModel = viewModel
+        navigationController.pushViewController(viewController, animated: true)
     }
 }
