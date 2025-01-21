@@ -10,14 +10,23 @@ import UIKit
 final class UsersCoordinator: Coordinator {
     var finish: (() -> Void)?
 
-    var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
+
+    private let dataService: UsersDataService
     
-    func start() {
-        
+    init(_ navigationController: UINavigationController, usersDataService: UsersDataService) {
+        self.navigationController = navigationController
+        dataService = usersDataService
     }
     
-    init(_ navigationController: UINavigationController) {
-        self.navigationController = navigationController
+    func start() {
+        let s = Session(token: UUID(), validUntil: Date.distantFuture, type: .user)
+        Task {
+            do {
+                try await dataService.updateData(in: s)
+            } catch {
+                print(error)
+            }
+        }
     }
 }

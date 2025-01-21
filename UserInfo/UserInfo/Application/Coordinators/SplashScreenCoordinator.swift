@@ -10,9 +10,9 @@ import UIKit
 final class SplashScreenCoordinator: Coordinator {
     var finish: (() -> Void)?
     
-    var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     
+    //Discuss: state in coordinator?
     var activeSessionExist: Bool = false
     
     private let initStepsProvider: AppInitStepsProvider
