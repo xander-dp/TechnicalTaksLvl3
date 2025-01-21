@@ -8,4 +8,5 @@
 protocol UsersDataService {
     func fetchData() async throws -> [UserEntity]
     func updateData(in session: Session) async throws
+    func clearData() async throws
 }

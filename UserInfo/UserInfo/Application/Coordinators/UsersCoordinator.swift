@@ -23,7 +23,8 @@ final class UsersCoordinator: Coordinator {
         let s = Session(token: UUID(), validUntil: Date.distantFuture, type: .user)
         Task {
             do {
-                try await dataService.updateData(in: s)
+                let d = try await dataService.fetchData()
+                print(d)
             } catch {
                 print(error)
             }

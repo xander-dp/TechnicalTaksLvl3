@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23605" systemVersion="23G93" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <entity name="BirthData" representedClassName=".BirthDataMO" syncable="YES">
+        <attribute name="age" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserEntity" inverseName="birthData" inverseEntity="UserEntity"/>
+    </entity>
+    <entity name="Name" representedClassName=".NameMO" syncable="YES">
+        <attribute name="first" attributeType="String" defaultValueString=""/>
+        <attribute name="last" attributeType="String" defaultValueString=""/>
+        <attribute name="title" attributeType="String" defaultValueString=""/>
+        <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserEntity" inverseName="name" inverseEntity="UserEntity"/>
+    </entity>
+    <entity name="UserEntity" representedClassName=".UserEntityMO" syncable="YES">
+        <attribute name="email" attributeType="String" defaultValueString=""/>
+        <relationship name="birthData" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="BirthData" inverseName="user" inverseEntity="BirthData"/>
+        <relationship name="name" maxCount="1" deletionRule="Cascade" destinationEntity="Name" inverseName="user" inverseEntity="Name"/>
+        <relationship name="picture" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="UserPicture" inverseName="user" inverseEntity="UserPicture"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="email"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="UserPicture" representedClassName=".UserPictureMO" syncable="YES">
+        <attribute name="large" attributeType="String" defaultValueString=""/>
+        <attribute name="medium" attributeType="String" defaultValueString=""/>
+        <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserEntity" inverseName="picture" inverseEntity="UserEntity"/>
+    </entity>
+</model>

@@ -25,8 +25,9 @@ struct DependencyMaker {
     
     func makeUsersDataService() -> UsersDataService {
         let apiService = makeUsersApiService()
+        let dataSorage = makeUsersDataStorage()
         
-        return UsersDataServiceImplementation(apiService: apiService)
+        return UsersDataServiceImplementation(dataStorage: dataSorage, apiService: apiService)
     }
     
     private func makeSessionStorage() -> SessionStorage {
@@ -53,6 +54,10 @@ struct DependencyMaker {
             dataRequester: dataRequester,
             jsonDecoder: decoder
         )
+    }
+    
+    private func makeUsersDataStorage() -> UsersStorage {
+        UsersStorageCoreData()
     }
     
     private func makeUsersAPIRequestBuilder() -> APIRequestBuilder {

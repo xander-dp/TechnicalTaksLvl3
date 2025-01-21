@@ -8,11 +8,13 @@
 import Foundation
 
 struct UserEntity: Codable {
+    let email: String
     let name: Name
     let birthData: BirthData
     let picture: UserPicture
     
     enum CodingKeys: String, CodingKey {
+        case email
         case name
         case birthData = "dob"
         case picture
