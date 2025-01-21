@@ -29,7 +29,7 @@ struct Session: Equatable, Copyable {
 extension Session: Codable {
     enum CodingKeys: String, CodingKey {
         case token
-        case validUntil = "user_last_name"
+        case validUntil
         case typeRaw
     }
     

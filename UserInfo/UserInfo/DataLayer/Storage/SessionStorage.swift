@@ -21,6 +21,8 @@ final class SessionStorageUserDefaults: SessionStorage {
         self.userDefaults = userDefaults
     }
     
+    //Discuss: error handling, thread safety?
+    //TODO: log erros, thread safety with serial queue
     func writeSession(_ session: Session) {
         let encoded = try? PropertyListEncoder().encode(session)
         userDefaults.set(encoded, forKey: key)
