@@ -7,12 +7,14 @@
 
 import CoreData
 
+
 final class UsersStorageCoreData: NSObject, UsersStorage {
     private static let modelName = "UsersModel"
     
     private let container: NSPersistentContainer
     
     var managedContext: NSManagedObjectContext {
+        //TODO: add thread safety
         return self.container.viewContext
     }
     
@@ -28,9 +30,20 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
         }
     }
     
-    func write(entities: [UserEntity]) async throws(DataStorageError) {
+    func writeUnique(entities: [UserEntity], with token: UUID) async throws(DataStorageError) -> [UserEntity] {
+        do {
+            try await saveToken(token)
+        } catch {
+            //log
+        }
+        
+        var newUniqueEntities: [UserEntity] = []
+        
         for entity in entities {
-            _ = UserEntityMO(context: self.managedContext, with: entity)
+            if !existing(email: entity.email) {
+                _ = UserEntityMO(context: self.managedContext, with: entity)
+                newUniqueEntities.append(entity)
+            }
         }
         
         do {
@@ -38,9 +51,21 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
         } catch {
             throw DataStorageError.creation
         }
+        
+        return newUniqueEntities
     }
     
-    func read() async throws(DataStorageError) -> [UserEntity] {
+    func read(with token: UUID) async throws(DataStorageError) -> [UserEntity] {
+        do {
+            if try tokenColidesWithExistent(token) {
+                try await clearStorage()
+                return []
+            }
+        } catch {
+            print(error)
+            //log
+        }
+        
         let fetchRequest = UserEntityMO.fetchRequest()
         
         do {
@@ -50,6 +75,7 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
             throw DataStorageError.reading
         }
     }
+    
     
     func clearStorage() async throws(DataStorageError) {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: UserEntityMO.entityName)
@@ -61,4 +87,61 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
             throw DataStorageError.deletion
         }
     }
+    
+    private func saveToken(_ token: UUID) async throws {
+        let request = SessionRecordMO.fetchRequest()
+        request.fetchLimit = 1
+        
+        let tokenExist = try self.managedContext.count(for: request) > 0
+        
+        if tokenExist {
+            //override & data cleanup
+            guard let existentRecord = try self.managedContext.fetch(request).first else {
+                return
+            }
+            
+            if existentRecord.token != token {
+                try await clearStorage()
+                existentRecord.token = token
+                try managedContext.save()
+            }
+        } else {
+            //save
+            let sessionRecord = SessionRecordMO(context: managedContext)
+            sessionRecord.token = token
+            try managedContext.save()
+        }
+    }
+    
+    private func tokenColidesWithExistent(_ token: UUID) throws -> Bool {
+        let request = SessionRecordMO.fetchRequest()
+        
+        guard let existentRecord = try self.managedContext.fetch(request).first else {
+            return false
+        }
+        
+        return existentRecord.token != token
+    }
+    
+    private func existing(email: String) -> Bool {
+        getEntity(with: email) != nil
+    }
+    
+    private func getEntity(with email: String) -> UserEntityMO? {
+          do {
+              let lhs = NSExpression(forConstantValue: email)
+              let rhs = NSExpression(forKeyPath: "email")
+              let predicate = NSComparisonPredicate(leftExpression: lhs, rightExpression: rhs, modifier: .direct, type: .equalTo)
+              
+              let request = UserEntityMO.fetchRequest()
+              request.predicate = predicate
+              request.fetchLimit = 1
+              
+              let entity = try self.managedContext.fetch(request)
+              return entity.first
+          } catch {
+              //log("Unable to find entity with email: \(email)")
+              return nil
+          }
+      }
 }

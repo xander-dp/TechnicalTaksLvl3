@@ -11,6 +11,9 @@
         <attribute name="title" attributeType="String" defaultValueString=""/>
         <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserEntity" inverseName="name" inverseEntity="UserEntity"/>
     </entity>
+    <entity name="SessionRecord" representedClassName=".SessionRecordMO" syncable="YES">
+        <attribute name="token" attributeType="UUID" usesScalarValueType="NO"/>
+    </entity>
     <entity name="UserEntity" representedClassName=".UserEntityMO" syncable="YES">
         <attribute name="email" attributeType="String" defaultValueString=""/>
         <relationship name="birthData" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="BirthData" inverseName="user" inverseEntity="BirthData"/>

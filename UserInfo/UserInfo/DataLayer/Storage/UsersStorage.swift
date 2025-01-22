@@ -5,6 +5,8 @@
 //  Created by Oleksandr Savchenko on 21.01.25.
 //
 
+import Foundation
+
 enum DataStorageError: Error {
     case creation
     case reading
@@ -13,7 +15,7 @@ enum DataStorageError: Error {
 }
 
 protocol UsersStorage {
-    func write(entities: [UserEntity]) async throws(DataStorageError)
-    func read() async throws(DataStorageError) -> [UserEntity]
+    func writeUnique(entities: [UserEntity], with token: UUID) async throws(DataStorageError) -> [UserEntity]
+    func read(with token: UUID) async throws(DataStorageError) -> [UserEntity]
     func clearStorage() async throws(DataStorageError)
 }

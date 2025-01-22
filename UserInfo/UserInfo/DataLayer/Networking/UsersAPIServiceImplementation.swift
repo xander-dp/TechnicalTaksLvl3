@@ -8,16 +8,6 @@
 import Foundation
 
 final class UsersAPIServiceImplementation: UsersAPIService {
-    private let defaultAmount = 20
-    private var lastRequestedPage: Int?
-    private var nextPage: Int {
-        if let lastRequestedPage {
-            lastRequestedPage + 1
-        } else {
-            1
-        }
-    }
-    
     private let jsonDecoder: JSONDecoder
     private let requestBuilder: APIRequestBuilder
     private let dataRequester: DataHTTPRequester
@@ -28,14 +18,9 @@ final class UsersAPIServiceImplementation: UsersAPIService {
         self.jsonDecoder = jsonDecoder
     }
     
-    func getUsersData(for session: Session) async throws -> [UserEntity] {
-        try await getUsersData(for: session, amount: defaultAmount)
-    }
-    
-    func getUsersData(for session: Session, amount: Int) async throws -> [UserEntity] {
-        let currentPage = nextPage
+    func getUsersData(for session: Session, from page: Int, amount: Int) async throws -> [UserEntity] {
         let token = session.token.uuidString
-        let endpoint = UsersAPIEndpoint.getUsers(page: currentPage, amount: amount, seed: token)
+        let endpoint = UsersAPIEndpoint.getUsers(page: page, amount: amount, seed: token)
         
         guard let urlRequest = requestBuilder.buildRequest(for: endpoint) else {
             throw APIRequestError.unableToProcessRequest(phase: .create)
@@ -54,19 +39,12 @@ final class UsersAPIServiceImplementation: UsersAPIService {
             throw APIRequestError.serviceUnavailable(description: error)
         }
         
-        guard let results = response.results,
-              let info = response.info else {
+        guard let results = response.results else {
             throw APIRequestError.unableToProcessRequest(phase: .mapping)
         }
         
         let receivedEntities = results
-        lastRequestedPage = info.page
         
         return receivedEntities
-    }
-    
-    func pullToRefresh(session: Session) async throws {
-        self.lastRequestedPage = 0
-        try await getUsersData(for: session)
     }
 }

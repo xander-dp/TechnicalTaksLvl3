@@ -30,6 +30,13 @@ struct DependencyMaker {
         return UsersDataServiceImplementation(dataStorage: dataSorage, apiService: apiService)
     }
     
+    func makeImageLoader() -> ImageLoader {
+        let requestBuilder = makeUsersAPIRequestBuilder()
+        let dataRequester = makeHTTPRequester()
+        
+        return UserImageLoader(requestBuilder: requestBuilder, dataRequester: dataRequester)
+    }
+    
     private func makeSessionStorage() -> SessionStorage {
         SessionStorageUserDefaults()
     }

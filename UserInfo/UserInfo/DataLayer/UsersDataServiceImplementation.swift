@@ -6,6 +6,8 @@
 //
 
 final class UsersDataServiceImplementation: UsersDataService {
+    private let defaultAmount = 20
+    
     private let dataStorage: UsersStorage
     private let apiService: UsersAPIService
     
@@ -14,13 +16,16 @@ final class UsersDataServiceImplementation: UsersDataService {
         self.apiService = apiService
     }
     
-    func fetchData() async throws -> [UserEntity] {
-        return try await self.dataStorage.read()
+    func fetchData(for session: Session) async throws -> [UserEntity] {
+        return try await self.dataStorage.read(with: session.token)
     }
     
-    func updateData(in session: Session) async throws {
-        let receivedData = try await self.apiService.getUsersData(for: session)
-        try await dataStorage.write(entities: receivedData)
+    func updateData(in session: Session, startingFrom currentAmount: Int) async throws -> [UserEntity] {
+        let page = currentAmount / defaultAmount + 1
+        let receivedData = try await self.apiService.getUsersData(for: session, from: page, amount: defaultAmount)
+        let uniqueEntities = try await dataStorage.writeUnique(entities: receivedData, with: session.token)
+        
+        return uniqueEntities
     }
     
     func clearData() async throws {

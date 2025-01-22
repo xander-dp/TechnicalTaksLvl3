@@ -30,7 +30,7 @@ final class UserEntityMO: NSManagedObject, Identifiable {
     
     func toUserEntity() -> UserEntity {
         let name = Name(title: name.title, first: name.first, last: name.last)
-        let birthData = BirthData(date: birthData.date, age: birthData.age)
+        let birthData = BirthData(date: birthData.date, age: Int(birthData.age))
         let picture = UserPicture(medium: picture.medium, large: picture.large)
         
         return UserEntity(email: email, name: name, birthData: birthData, picture: picture)
@@ -60,14 +60,14 @@ final class NameMO: NSManagedObject, Identifiable {
 
 final class BirthDataMO: NSManagedObject, Identifiable {
     @NSManaged var date: Date
-    @NSManaged var age: Int
+    @NSManaged var age: Int32
     @NSManaged var user: UserEntityMO
     
     convenience init(context: NSManagedObjectContext, with entity: BirthData) {
         self.init(context: context)
         
         self.date = entity.date
-        self.age = entity.age
+        self.age = Int32(entity.age)
     }
 }
 

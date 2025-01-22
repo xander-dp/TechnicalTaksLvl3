@@ -13,21 +13,39 @@ final class UsersCoordinator: Coordinator {
     var navigationController: UINavigationController
 
     private let dataService: UsersDataService
+    private let imageLoader: ImageLoader
+    private let sessionKeeper: SessionKeeper
     
-    init(_ navigationController: UINavigationController, usersDataService: UsersDataService) {
+    init(
+        _ navigationController: UINavigationController,
+        usersDataService: UsersDataService,
+        imageLoader: ImageLoader,
+        sessionKeeper: SessionKeeper
+    ) {
         self.navigationController = navigationController
-        dataService = usersDataService
+        self.dataService = usersDataService
+        self.imageLoader = imageLoader
+        self.sessionKeeper = sessionKeeper
     }
     
     func start() {
-        let s = Session(token: UUID(), validUntil: Date.distantFuture, type: .user)
-        Task {
-            do {
-                let d = try await dataService.fetchData()
-                print(d)
-            } catch {
-                print(error)
-            }
+        let viewModel = UsersListViewModel(
+            dataService: dataService,
+            imageLoader: imageLoader,
+            sessionKeeper: sessionKeeper
+        )
+        
+        viewModel.itemSelected = { [weak self] item in
+            print(item)
         }
+        
+        viewModel.logoutPerformed = { [weak self] in
+            self?.finish?()
+        }
+        
+        let viewController = UsersListViewController()
+        viewController.viewModel = viewModel
+        
+        navigationController.pushViewController(viewController, animated: true)
     }
 }

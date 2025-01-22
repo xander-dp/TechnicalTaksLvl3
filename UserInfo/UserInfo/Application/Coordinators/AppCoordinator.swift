@@ -20,6 +20,7 @@ final class AppCoordinator: Coordinator {
     private let sessionKeeper: SessionKeeper
     private let validator: CredentialsValidator
     private let usersDataService: UsersDataService
+    private let usersImageLoader: ImageLoader
     
     init(window: UIWindow?, dependencyMaker: DependencyMaker) {
         self.window = window
@@ -28,6 +29,7 @@ final class AppCoordinator: Coordinator {
         sessionKeeper = dependencyMaker.makeSessionKeeper()
         validator = dependencyMaker.makeCredentialsValidator()
         usersDataService = dependencyMaker.makeUsersDataService()
+        usersImageLoader = dependencyMaker.makeImageLoader()
     }
     
     func start() {
@@ -35,7 +37,7 @@ final class AppCoordinator: Coordinator {
         startSplashScreen()
     }
     
-    func startSplashScreen() {
+    private func startSplashScreen() {
         let coordinator = SplashScreenCoordinator(navigationController, initStepsProvider: initStepsProvider, sessionKeeper: sessionKeeper)
         coordinator.finish = { [weak coordinator] in
             var activeSessionExist = false
@@ -57,7 +59,7 @@ final class AppCoordinator: Coordinator {
         self.addChild(coordinator)
     }
     
-    func startAuthModule() {
+    private func startAuthModule() {
         let coordinator = AuthCoordinator(navigationController, sessionKeeper: sessionKeeper, validator: validator)
         coordinator.finish = { [weak coordinator] in
             if let coordinator {
@@ -71,8 +73,14 @@ final class AppCoordinator: Coordinator {
         self.addChild(coordinator)
     }
     
-    func startUsersModule() {
-        let coordinator = UsersCoordinator(navigationController, usersDataService: usersDataService)
+    private func startUsersModule() {
+        let coordinator = UsersCoordinator(
+            navigationController,
+            usersDataService: usersDataService,
+            imageLoader: usersImageLoader,
+            sessionKeeper: sessionKeeper
+        )
+        
         coordinator.finish = { [weak coordinator] in
             if let coordinator = coordinator {
                 self.removeChild(coordinator)

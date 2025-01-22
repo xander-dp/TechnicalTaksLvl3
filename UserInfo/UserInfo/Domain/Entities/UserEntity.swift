@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct UserEntity: Codable {
+struct UserEntity: Codable, Hashable {
     let email: String
     let name: Name
     let birthData: BirthData
@@ -19,9 +19,13 @@ struct UserEntity: Codable {
         case birthData = "dob"
         case picture
     }
+    
+    static func == (lhs: UserEntity, rhs: UserEntity) -> Bool {
+        lhs.email == rhs.email
+    }
 }
 
-struct Name: Codable {
+struct Name: Codable, Hashable {
     let title: String
     let first: String
     let last: String
@@ -31,12 +35,12 @@ struct Name: Codable {
     }
 }
 
-struct BirthData: Codable {
+struct BirthData: Codable, Hashable {
     let date: Date
     let age: Int
 }
 
-struct UserPicture: Codable {
+struct UserPicture: Codable, Hashable {
     let medium: String
     let large: String
 }

@@ -6,7 +6,7 @@
 //
 
 protocol UsersDataService {
-    func fetchData() async throws -> [UserEntity]
-    func updateData(in session: Session) async throws
+    func fetchData(for session: Session) async throws -> [UserEntity]
+    func updateData(in session: Session, startingFrom currentAmount: Int) async throws -> [UserEntity]
     func clearData() async throws
 }
