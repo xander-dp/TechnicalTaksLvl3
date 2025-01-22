@@ -5,6 +5,8 @@
 //  Created by Oleksandr Savchenko on 20.01.25.
 //
 
+import Foundation
+
 struct DependencyMaker {
     func makeSessionKeeper() -> SessionKeeper {
         let storage = makeSessionStorage()
@@ -21,6 +23,20 @@ struct DependencyMaker {
         CredentialsValidatorImplementation()
     }
     
+    func makeUsersDataService() -> UsersDataService {
+        let apiService = makeUsersApiService()
+        let dataSorage = makeUsersDataStorage()
+        
+        return UsersDataServiceImplementation(dataStorage: dataSorage, apiService: apiService)
+    }
+    
+    func makeImageLoader() -> ImageLoader {
+        let requestBuilder = makeUsersAPIRequestBuilder()
+        let dataRequester = makeHTTPRequester()
+        
+        return UserImageLoader(requestBuilder: requestBuilder, dataRequester: dataRequester)
+    }
+    
     private func makeSessionStorage() -> SessionStorage {
         SessionStorageUserDefaults()
     }
@@ -33,5 +49,34 @@ struct DependencyMaker {
     
     private func makeAuthAPIService() -> AuthAPIService {
         AuthAPIServiceStub()
+    }
+    
+    private func makeUsersApiService() -> UsersAPIService {
+        let requestBuilder = makeUsersAPIRequestBuilder()
+        let dataRequester = makeHTTPRequester()
+        let decoder = makeCustomJSONDecoder()
+        
+        return UsersAPIServiceImplementation(
+            apiRequestBuilder: requestBuilder,
+            dataRequester: dataRequester,
+            jsonDecoder: decoder
+        )
+    }
+    
+    private func makeUsersDataStorage() -> UsersStorage {
+        UsersStorageCoreData()
+    }
+    
+    private func makeUsersAPIRequestBuilder() -> APIRequestBuilder {
+        UsersAPIRequestBuilder()
+    }
+    
+    private func makeHTTPRequester() -> DataHTTPRequester {
+        UsersDataHTTPRequester()
+    }
+    
+    private func makeCustomJSONDecoder() -> JSONDecoder {
+        let sharedFormatter = ISO8601DateFormatterSingleton.instance
+        return JSONDecoderWithCustomDateDecodingStrategy(formatter: sharedFormatter)
     }
 }

@@ -19,6 +19,8 @@ final class AppCoordinator: Coordinator {
     private let initStepsProvider: AppInitStepsProvider
     private let sessionKeeper: SessionKeeper
     private let validator: CredentialsValidator
+    private let usersDataService: UsersDataService
+    private let usersImageLoader: ImageLoader
     
     init(window: UIWindow?, dependencyMaker: DependencyMaker) {
         self.window = window
@@ -26,6 +28,8 @@ final class AppCoordinator: Coordinator {
         initStepsProvider = dependencyMaker.makeAppInitStepsProvider()
         sessionKeeper = dependencyMaker.makeSessionKeeper()
         validator = dependencyMaker.makeCredentialsValidator()
+        usersDataService = dependencyMaker.makeUsersDataService()
+        usersImageLoader = dependencyMaker.makeImageLoader()
     }
     
     func start() {
@@ -33,52 +37,67 @@ final class AppCoordinator: Coordinator {
         startSplashScreen()
     }
     
-    func startSplashScreen() {
+    private func startSplashScreen() {
         let coordinator = SplashScreenCoordinator(navigationController, initStepsProvider: initStepsProvider, sessionKeeper: sessionKeeper)
-        coordinator.finish = { [weak self, weak coordinator] in
+        coordinator.finish = { [weak coordinator] in
             var activeSessionExist = false
             
             if let coordinator {
+                //TODO: find out if there is a way to avoid coordinator property usage
                 activeSessionExist = coordinator.activeSessionExist
-                self?.removeChild(coordinator)
+                self.removeChild(coordinator)
             }
-            self?.navigationController.viewControllers.removeAll()
+            self.navigationController.viewControllers.removeAll()
             
             if activeSessionExist {
-                self?.startUsersModule()
+                self.startUsersModule()
             } else {
-                self?.startAuthModule()
+                self.startAuthModule()
             }
         }
         coordinator.start()
         self.addChild(coordinator)
     }
     
-    func startAuthModule() {
+    private func startAuthModule() {
         let coordinator = AuthCoordinator(navigationController, sessionKeeper: sessionKeeper, validator: validator)
-        coordinator.finish = { [weak self, weak coordinator] in
+        coordinator.finish = { [weak coordinator] in
             if let coordinator {
-                self?.removeChild(coordinator)
+                self.removeChild(coordinator)
             }
-            self?.navigationController.viewControllers.removeAll()
-            self?.startUsersModule()
+            self.navigationController.viewControllers.removeAll()
+            self.startUsersModule()
         }
         
         coordinator.start()
         self.addChild(coordinator)
     }
     
-    func startUsersModule() {
-        let coordinator = UsersCoordinator(navigationController)
-        coordinator.finish = { [weak self, weak coordinator] in
+    private func startUsersModule() {
+        let coordinator = UsersCoordinator(
+            navigationController,
+            usersDataService: usersDataService,
+            imageLoader: usersImageLoader,
+            sessionKeeper: sessionKeeper
+        )
+        
+        coordinator.finish = { [weak coordinator] in
             if let coordinator = coordinator {
-                self?.removeChild(coordinator)
+                self.removeChild(coordinator)
             }
-            self?.navigationController.viewControllers.removeAll()
-            self?.startAuthModule()
+            self.navigationController.viewControllers.removeAll()
+            self.startAuthModule()
         }
         
         coordinator.start()
         self.addChild(coordinator)
+    }
+    
+    private func addChild(_ coordinator: Coordinator) {
+        childCoordinators.append(coordinator)
+    }
+    
+    private func removeChild(_ coordinator: Coordinator) {
+        childCoordinators = childCoordinators.filter { $0 !== coordinator }
     }
 }

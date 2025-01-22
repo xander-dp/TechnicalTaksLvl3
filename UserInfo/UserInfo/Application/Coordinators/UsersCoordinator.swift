@@ -10,14 +10,42 @@ import UIKit
 final class UsersCoordinator: Coordinator {
     var finish: (() -> Void)?
 
-    var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
+
+    private let dataService: UsersDataService
+    private let imageLoader: ImageLoader
+    private let sessionKeeper: SessionKeeper
     
-    func start() {
-        
+    init(
+        _ navigationController: UINavigationController,
+        usersDataService: UsersDataService,
+        imageLoader: ImageLoader,
+        sessionKeeper: SessionKeeper
+    ) {
+        self.navigationController = navigationController
+        self.dataService = usersDataService
+        self.imageLoader = imageLoader
+        self.sessionKeeper = sessionKeeper
     }
     
-    init(_ navigationController: UINavigationController) {
-        self.navigationController = navigationController
+    func start() {
+        let viewModel = UsersListViewModel(
+            dataService: dataService,
+            imageLoader: imageLoader,
+            sessionKeeper: sessionKeeper
+        )
+        
+        viewModel.itemSelected = { [weak self] item in
+            print(item)
+        }
+        
+        viewModel.logoutPerformed = { [weak self] in
+            self?.finish?()
+        }
+        
+        let viewController = UsersListViewController()
+        viewController.viewModel = viewModel
+        
+        navigationController.pushViewController(viewController, animated: true)
     }
 }

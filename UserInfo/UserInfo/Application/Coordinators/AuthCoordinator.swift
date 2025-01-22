@@ -10,7 +10,6 @@ import UIKit
 final class AuthCoordinator: Coordinator {
     var finish: (() -> Void)?
 
-    var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     
     private let sessionKeeper: SessionKeeper

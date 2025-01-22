@@ -53,6 +53,10 @@ final class LocalSessionKeeper: SessionKeeper {
             return nil
         }
         
+        Task {
+            try? await updateSession(savedSession)
+        }
+        
         return savedSession
     }
     
@@ -63,9 +67,8 @@ final class LocalSessionKeeper: SessionKeeper {
         return newSession
     }
     
-    func invalidateCurrentSession(sessionInvalidatedCallback: (() -> Void)? = nil) async throws {
-        try await authService.logout()
+    func invalidateCurrentSession() async throws {
         currentSession = nil
-        sessionInvalidatedCallback?()
+        try await authService.logout()
     }
 }
