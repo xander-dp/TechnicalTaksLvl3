@@ -31,6 +31,6 @@ final class AuthCoordinator: Coordinator {
         let viewController = AuthViewController()
         viewController.viewModel = viewModel
         
-        navigationController.pushViewController(viewController, animated: true)
+        navigationController.setViewControllers([viewController], animated: true)
     }
 }

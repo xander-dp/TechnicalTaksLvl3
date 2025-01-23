@@ -11,7 +11,6 @@ enum DataStorageError: Error {
     case creation
     case reading
     case deletion
-    case unexistingRecord
 }
 
 protocol UsersStorage {

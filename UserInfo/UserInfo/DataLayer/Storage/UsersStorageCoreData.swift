@@ -6,6 +6,7 @@
 //
 
 import CoreData
+import OSLog
 
 
 final class UsersStorageCoreData: NSObject, UsersStorage {
@@ -23,6 +24,7 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
         self.container.viewContext.mergePolicy = NSMergePolicy(merge: .mergeByPropertyStoreTrumpMergePolicyType)
         
         self.container.loadPersistentStores { (storeDescription, error) in
+            Logger.dataStorage.error("Unable to load PersistentStore: \(error)")
             assert(
                 error == nil,
                 "Unable to load CoreData's Persistent Store. Error: \(error.debugDescription)"
@@ -34,7 +36,7 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
         do {
             try await saveToken(token)
         } catch {
-            //log
+            Logger.dataStorage.error("Unable to save token: \(error)")
         }
         
         var newUniqueEntities: [UserEntity] = []
@@ -62,8 +64,7 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
                 return []
             }
         } catch {
-            print(error)
-            //log
+            Logger.dataStorage.error("Unable to check token before request: \(error)")
         }
         
         let fetchRequest = UserEntityMO.fetchRequest()
@@ -140,7 +141,7 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
               let entity = try self.managedContext.fetch(request)
               return entity.first
           } catch {
-              //log("Unable to find entity with email: \(email)")
+              Logger.dataStorage.error("Unable to find entity with email: \(email), error: \(error)")
               return nil
           }
       }

@@ -47,7 +47,6 @@ final class AppCoordinator: Coordinator {
                 activeSessionExist = coordinator.activeSessionExist
                 self.removeChild(coordinator)
             }
-            self.navigationController.viewControllers.removeAll()
             
             if activeSessionExist {
                 self.startUsersModule()
@@ -65,7 +64,7 @@ final class AppCoordinator: Coordinator {
             if let coordinator {
                 self.removeChild(coordinator)
             }
-            self.navigationController.viewControllers.removeAll()
+            
             self.startUsersModule()
         }
         
@@ -85,7 +84,7 @@ final class AppCoordinator: Coordinator {
             if let coordinator = coordinator {
                 self.removeChild(coordinator)
             }
-            self.navigationController.viewControllers.removeAll()
+            
             self.startAuthModule()
         }
         

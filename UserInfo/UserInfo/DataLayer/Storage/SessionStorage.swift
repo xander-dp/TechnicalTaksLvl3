@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Dispatch
+import OSLog
 
 protocol SessionStorage {
     func writeSession(_ session: Session)
@@ -17,27 +19,50 @@ final class SessionStorageUserDefaults: SessionStorage {
     private let key = "session_data"
     private let userDefaults: UserDefaults
     
+    private let accessQueue: DispatchQueue
+    
     init(userDefaults: UserDefaults = UserDefaults.standard) {
+        accessQueue = DispatchQueue(label: "com.technicaltasklvl3.SessionStorage.accessQueue",
+                                    qos: .userInteractive,
+                                    attributes: [],
+                                    autoreleaseFrequency: .inherit,
+                                    target: nil)
         self.userDefaults = userDefaults
     }
     
-    //Discuss: error handling, thread safety?
-    //TODO: log erros, thread safety with serial queue
     func writeSession(_ session: Session) {
-        let encoded = try? PropertyListEncoder().encode(session)
-        userDefaults.set(encoded, forKey: key)
+        do {
+            let encoded = try PropertyListEncoder().encode(session)
+            accessQueue.sync {
+                self.userDefaults.set(encoded, forKey: self.key)
+            }
+        } catch {
+            Logger.session.error("Error during session saving: \(error)")
+        }
     }
     
     func readSession() -> Session? {
-        guard let someData = userDefaults.object(forKey: key) as? Data else {
+        var data: Data?
+        accessQueue.sync {
+            data = userDefaults.object(forKey: key) as? Data
+        }
+        
+        guard let someData = data else {
             return nil
         }
         
-        let decoded = try? PropertyListDecoder().decode(Session.self, from: someData)
-        return decoded
+        do {
+            let decoded = try PropertyListDecoder().decode(Session.self, from: someData)
+            return decoded
+        } catch {
+            Logger.session.error("Error during session saving: \(error)")
+            return nil
+        }
     }
     
     func wipeSessionData() {
-        userDefaults.removeObject(forKey: key)
+        accessQueue.sync {
+            userDefaults.removeObject(forKey: key)
+        }
     }
 }

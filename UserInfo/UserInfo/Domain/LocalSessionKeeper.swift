@@ -54,17 +54,18 @@ final class LocalSessionKeeper: SessionKeeper {
         }
         
         Task {
-            try? await updateSession(savedSession)
+            await updateSession(savedSession)
         }
         
         return savedSession
     }
     
-    func updateSession(_ session: Session) async throws -> Session {
-        let newSession = try await authService.updateSession(session)
-        
-        currentSession = newSession
-        return newSession
+    private func updateSession(_ session: Session) async {
+        do {
+            currentSession = try await authService.updateSession(session)
+        } catch {
+            //log
+        }
     }
     
     func invalidateCurrentSession() async throws {

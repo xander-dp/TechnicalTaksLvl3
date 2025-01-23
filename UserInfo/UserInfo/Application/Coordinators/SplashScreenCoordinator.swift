@@ -12,7 +12,6 @@ final class SplashScreenCoordinator: Coordinator {
     
     var navigationController: UINavigationController
     
-    //Discuss: state in coordinator?
     var activeSessionExist: Bool = false
     
     private let initStepsProvider: AppInitStepsProvider
@@ -34,6 +33,6 @@ final class SplashScreenCoordinator: Coordinator {
         
         let viewController = SplashScreenViewController()
         viewController.viewModel = viewModel
-        navigationController.pushViewController(viewController, animated: true)
+        navigationController.setViewControllers([viewController], animated: true)
     }
 }

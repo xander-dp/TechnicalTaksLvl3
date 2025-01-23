@@ -7,6 +7,7 @@
 
 import Combine
 import UIKit
+import OSLog
 
 final class UserDetailsViewModel {
     struct Input {
@@ -56,7 +57,7 @@ final class UserDetailsViewModel {
             } catch {
                 let image = UserEntityUIRepresentation.DefaultImages.errorLoadingImage
                 imageLoadedSubject.send(image)
-                //log
+                Logger.dataLoading.error("Error during detailed image loading: \(error)")
             }
         }
     }

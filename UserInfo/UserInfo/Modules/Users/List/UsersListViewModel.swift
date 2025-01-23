@@ -7,6 +7,7 @@
 
 import Combine
 import UIKit
+import OSLog
 
 final class UsersListViewModel {
     typealias ImageForItem = (image: UIImage?, item: UserEntityUIRepresentation)
@@ -170,10 +171,6 @@ final class UsersListViewModel {
             do {
                 let data = try await dataService.fetchData(for: session)
                 entities = data
-                print(data.count)
-                data.forEach { e in
-                    print(e.name)
-                }
                 dataFetchedSubject.send(data)
             } catch {
                 self.errorSubject.send(error.localizedDescription)
@@ -188,12 +185,18 @@ final class UsersListViewModel {
         
         Task {
             do {
-                let data: [UserEntity]
+                //drop cached data on refresh
                 if refreshing {
-                    //drop cached data on refresh
                     entities.removeAll()
                     try await dataService.clearData()
-                    
+                }
+            } catch {
+                Logger.dataStorage.error("Error during storage cleanup on refresh: \(error)")
+            }
+            
+            do {
+                let data: [UserEntity]
+                if refreshing {
                     data = try await dataService.updateData(in: session, startingFrom: 0)
                 } else {
                     data = try await dataService.updateData(in: session, startingFrom: entities.count)
@@ -202,6 +205,7 @@ final class UsersListViewModel {
                 entities.append(contentsOf: data)
                 dataLoadedSubject.send(data)
             } catch {
+                Logger.dataLoading.error("Error while refreshing=\(refreshing, format: .truth) data load: \(error)")
                 self.errorSubject.send(error.localizedDescription)
             }
         }
@@ -225,8 +229,12 @@ final class UsersListViewModel {
     
     private func processLogout() {
         Task {
-            try await self.dataService.clearData()
-            try await sessionKeeper.invalidateCurrentSession()
+            do {
+                try await self.dataService.clearData()
+                try await sessionKeeper.invalidateCurrentSession()
+            } catch {
+                Logger.dataStorage.error("Error during storage cleanup on logout: \(error)")
+            }
             await MainActor.run {
                 self.logoutPerformed?()
             }
