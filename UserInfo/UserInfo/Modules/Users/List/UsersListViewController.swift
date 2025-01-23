@@ -34,11 +34,7 @@ final class UsersListViewController: UIViewController {
     
     private let refreshControl: UIRefreshControl = {
         let refreshControl = UIRefreshControl()
-        refreshControl.addTarget(
-            self,
-            action: #selector(refreshData),
-            for: .primaryActionTriggered
-        )
+        refreshControl.addTarget(self, action: #selector(refreshData), for: .primaryActionTriggered)
         return refreshControl
     }()
     
@@ -64,6 +60,7 @@ final class UsersListViewController: UIViewController {
     
     private let viewReadySubject = PassthroughSubject<Void, Never>()
     private let needImageForItem = PassthroughSubject<UserEntityUIRepresentation, Never>()
+    private let cellSelected = PassthroughSubject<Int, Never>()
     private let refreshSubject = PassthroughSubject<Void, Never>()
     private let requestMoreDataSubject = PassthroughSubject<Void, Never>()
     private let logoutInitiatedSubject = PassthroughSubject<Void, Never>()
@@ -96,7 +93,7 @@ final class UsersListViewController: UIViewController {
             viewReady: viewReadySubject.eraseToAnyPublisher(),
             entityNeedImage: needImageForItem.eraseToAnyPublisher(),
             newDataRequired: requestMoreDataSubject.eraseToAnyPublisher(),
-            itemSelected: PassthroughSubject<UserEntityUIRepresentation, Never>().eraseToAnyPublisher(),
+            itemSelected: cellSelected.eraseToAnyPublisher(),
             dataRefresh: refreshSubject.eraseToAnyPublisher(),
             logoutInitiated: logoutInitiatedSubject.eraseToAnyPublisher()
         )
@@ -174,7 +171,7 @@ final class UsersListViewController: UIViewController {
         ) { tableView, indexPath, entity in
             let cell = tableView.dequeueReusableCell(withIdentifier: UserCell.identifier, for: indexPath)
             
-            if entity.image == UserEntityUIRepresentation.DefaultImages.placeHolderImage {
+            if entity.needImageLoading {
                 self.needImageForItem.send(entity)
             }
             
@@ -246,6 +243,11 @@ final class UsersListViewController: UIViewController {
 }
 
 extension UsersListViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        cellSelected.send(indexPath.row)
+    }
+    
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         if indexPath.row == fetchedCount - 1 {
             requestMoreDataSubject.send()

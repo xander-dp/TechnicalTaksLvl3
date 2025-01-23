@@ -36,7 +36,7 @@ final class UsersCoordinator: Coordinator {
         )
         
         viewModel.itemSelected = { [weak self] item in
-            print(item)
+            self?.presentDetailController(with: item)
         }
         
         viewModel.logoutPerformed = { [weak self] in
@@ -47,5 +47,12 @@ final class UsersCoordinator: Coordinator {
         viewController.viewModel = viewModel
         
         navigationController.pushViewController(viewController, animated: true)
+    }
+    
+    private func presentDetailController(with item: UserEntity) {
+        let viewModel = UserDetailsViewModel(entity: item, imageLoader: imageLoader)
+        let viewConttroller = UserDetailsViewController()
+        viewConttroller.viewModel = viewModel
+        navigationController.present(viewConttroller, animated: true)
     }
 }
