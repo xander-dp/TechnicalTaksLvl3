@@ -15,7 +15,7 @@ final class UsersListViewModel {
         let viewReady: AnyPublisher<Void, Never>
         let entityNeedImage: AnyPublisher<UserEntityUIRepresentation, Never>
         let newDataRequired: AnyPublisher<Void, Never>
-        let itemSelected: AnyPublisher<UserEntityUIRepresentation, Never>
+        let itemSelected: AnyPublisher<Int, Never>
         let dataRefresh: AnyPublisher<Void, Never>
         let logoutInitiated: AnyPublisher<Void, Never>
     }
@@ -29,7 +29,7 @@ final class UsersListViewModel {
         let loadedItemsCount: AnyPublisher<Int, Never>
     }
     
-    var itemSelected: ((UserEntityUIRepresentation) -> Void)?
+    var itemSelected: ((UserEntity) -> Void)?
     var logoutPerformed: (() -> Void)?
     
     private let errorSubject = PassthroughSubject<String, Never>()
@@ -95,8 +95,10 @@ final class UsersListViewModel {
             .store(in: &cancellables)
         
         input.itemSelected
-            .sink { [weak self] item in
-                self?.itemSelected?(item)
+            .sink { [weak self] index in
+                if let entity = self?.entities[index] {
+                    self?.itemSelected?(entity)
+                }
             }
             .store(in: &cancellables)
         
@@ -214,7 +216,9 @@ final class UsersListViewModel {
                     imageLoadedSubject.send(ImageForItem(image: image, item: item))
                 }
             } catch {
-                self.errorSubject.send(error.localizedDescription)
+                let image = UserEntityUIRepresentation.DefaultImages.errorLoadingImage
+                imageLoadedSubject.send(ImageForItem(image: image, item: item))
+                //log
             }
         }
     }

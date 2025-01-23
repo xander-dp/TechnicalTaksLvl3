@@ -21,6 +21,10 @@ final class UserEntityUIRepresentation: Hashable {
     let age: String
     var image: UIImage?
     
+    var needImageLoading: Bool {
+        self.image == DefaultImages.placeHolderImage
+    }
+    
     init(with entity: UserEntity) {
         self.email = entity.email
         self.name = "\(entity.name.first) \(entity.name.last)"
