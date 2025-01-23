@@ -12,6 +12,5 @@ protocol SessionKeeper {
     
     func createSession(for type: SessionType, with credentials: Credentials) async throws
     func getSession() -> Session?
-    func updateSession(_ session: Session) async throws -> Session
     func invalidateCurrentSession() async throws
 }

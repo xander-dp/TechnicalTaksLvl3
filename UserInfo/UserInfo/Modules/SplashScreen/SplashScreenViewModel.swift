@@ -69,7 +69,6 @@ final class SplashScreenViewModel {
             
             await MainActor.run {
                 let hasAliveSesssion = sessionKeeper.getSession() != nil
-                //TODO: ADD SessionUpdate Request
                 self.initializationCompleted?(hasAliveSesssion)
             }
         }

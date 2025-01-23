@@ -46,7 +46,7 @@ final class UsersCoordinator: Coordinator {
         let viewController = UsersListViewController()
         viewController.viewModel = viewModel
         
-        navigationController.pushViewController(viewController, animated: true)
+        navigationController.setViewControllers([viewController], animated: true)
     }
     
     private func presentDetailController(with item: UserEntity) {

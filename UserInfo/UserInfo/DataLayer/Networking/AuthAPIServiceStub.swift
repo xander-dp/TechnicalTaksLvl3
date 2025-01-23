@@ -36,7 +36,7 @@ final class AuthAPIServiceStub: AuthAPIService {
     func performGuestLoginRequest() async throws -> ReceivedSessionData {
         let requestDuration = randomInterval(from: (0.1...1.0))
         
-        try await Task.sleep(nanoseconds: requestDuration)
+        try? await Task.sleep(nanoseconds: requestDuration)
         
         return (token: UUID(), validUntil: Date().advanced(by: Constants.validityOffset))
     }
@@ -44,7 +44,7 @@ final class AuthAPIServiceStub: AuthAPIService {
     func performSessionUpdateRequest(_ session: Session) async throws -> ReceivedSessionData {
         let requestDuration = randomInterval(from: (0.1...0.3))
         
-        try await Task.sleep(nanoseconds: requestDuration)
+        try? await Task.sleep(nanoseconds: requestDuration)
         
         return (token: session.token, validUntil: Date().advanced(by: Constants.validityOffset))
     }
@@ -52,7 +52,7 @@ final class AuthAPIServiceStub: AuthAPIService {
     func perfromLogoutRequest() async throws {
         let requestDuration = randomInterval(from: (0.1...0.3))
         
-        try await Task.sleep(nanoseconds: requestDuration)
+        try? await Task.sleep(nanoseconds: requestDuration)
     }
     
     private func isKnownUser(credentials: (key: String, value:String)) -> Bool {

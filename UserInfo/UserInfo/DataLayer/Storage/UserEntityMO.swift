@@ -42,12 +42,6 @@ final class NameMO: NSManagedObject, Identifiable {
     @NSManaged var last: String
     @NSManaged var title: String
     @NSManaged var user: UserEntityMO
-
-    //tmp
-    //TODO: delete
-    @nonobjc public class func fetchRequest() -> NSFetchRequest<NameMO> {
-        return NSFetchRequest<NameMO>(entityName: "Name")
-    }
     
     convenience init(context: NSManagedObjectContext, with entity: Name) {
         self.init(context: context)
