@@ -163,6 +163,12 @@ final class UsersListViewController: UIViewController {
                 self?.fetchedCount = count
             }
             .store(in: &cancellables)
+        
+        output.errorPublisher
+            .sink { [weak self] description in
+                self?.showErrorAlert(errorMessage: description)
+            }
+            .store(in: &cancellables)
     }
     
     private func initDataSource() {
@@ -230,6 +236,22 @@ final class UsersListViewController: UIViewController {
         
         let okButton = UIAlertAction(title: "OK", style: .default) { _ in
             self.logoutInitiatedSubject.send()
+        }
+        
+        alert.addAction(okButton)
+        
+        self.present(alert, animated: true)
+    }
+    
+    private func showErrorAlert(errorMessage: String) {
+        let alert = UIAlertController(
+            title: "Error",
+            message: errorMessage,
+            preferredStyle: .alert
+        )
+        
+        let okButton = UIAlertAction(title: "OK", style: .default) { _ in
+            alert.dismiss(animated: true)
         }
         
         alert.addAction(okButton)
