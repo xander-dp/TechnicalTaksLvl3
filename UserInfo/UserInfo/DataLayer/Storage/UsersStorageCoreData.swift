@@ -15,9 +15,14 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
     private let container: NSPersistentContainer
     
     var managedContext: NSManagedObjectContext {
-        //TODO: add thread safety
         return self.container.viewContext
     }
+    
+    lazy var backgroundContext: NSManagedObjectContext = {
+        let newbackgroundContext = container.newBackgroundContext()
+        newbackgroundContext.automaticallyMergesChangesFromParent = true
+        return newbackgroundContext
+    }()
     
     override init() {
         self.container = NSPersistentContainer(name: Self.modelName)
@@ -32,6 +37,14 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
         }
     }
     
+    private func saveContext() throws {
+        guard backgroundContext.hasChanges else { return }
+        
+        try self.backgroundContext.performAndWait {
+            try backgroundContext.save()
+        }
+    }
+    
     func writeUnique(entities: [UserEntity], with token: UUID) async throws(DataStorageError) -> [UserEntity] {
         do {
             try await saveToken(token)
@@ -43,13 +56,13 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
         
         for entity in entities {
             if !existing(email: entity.email) {
-                _ = UserEntityMO(context: self.managedContext, with: entity)
+                _ = UserEntityMO(context: self.backgroundContext, with: entity)
                 newUniqueEntities.append(entity)
             }
         }
         
         do {
-            try self.managedContext.save()
+            try saveContext()
         } catch {
             throw DataStorageError.creation
         }
@@ -70,7 +83,7 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
         let fetchRequest = UserEntityMO.fetchRequest()
         
         do {
-            let data = try self.managedContext.fetch(fetchRequest)
+            let data = try self.backgroundContext.fetch(fetchRequest)
             return data.map { $0.toUserEntity() }
         } catch {
             throw DataStorageError.reading
@@ -93,31 +106,31 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
         let request = SessionRecordMO.fetchRequest()
         request.fetchLimit = 1
         
-        let tokenExist = try self.managedContext.count(for: request) > 0
+        let tokenExist = try self.backgroundContext.count(for: request) > 0
         
         if tokenExist {
             //override & data cleanup
-            guard let existentRecord = try self.managedContext.fetch(request).first else {
+            guard let existentRecord = try self.backgroundContext.fetch(request).first else {
                 return
             }
             
             if existentRecord.token != token {
                 try await clearStorage()
                 existentRecord.token = token
-                try managedContext.save()
+                try saveContext()
             }
         } else {
             //save
-            let sessionRecord = SessionRecordMO(context: managedContext)
+            let sessionRecord = SessionRecordMO(context: backgroundContext)
             sessionRecord.token = token
-            try managedContext.save()
+            try saveContext()
         }
     }
     
     private func tokenColidesWithExistent(_ token: UUID) throws -> Bool {
         let request = SessionRecordMO.fetchRequest()
         
-        guard let existentRecord = try self.managedContext.fetch(request).first else {
+        guard let existentRecord = try self.backgroundContext.fetch(request).first else {
             return false
         }
         
@@ -138,7 +151,7 @@ final class UsersStorageCoreData: NSObject, UsersStorage {
               request.predicate = predicate
               request.fetchLimit = 1
               
-              let entity = try self.managedContext.fetch(request)
+              let entity = try self.backgroundContext.fetch(request)
               return entity.first
           } catch {
               Logger.dataStorage.error("Unable to find entity with email: \(email), error: \(error)")
